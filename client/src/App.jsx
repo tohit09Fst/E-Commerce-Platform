@@ -33,7 +33,10 @@ export default function App() {
 
   if (user === undefined) return <div>Loading...</div>;
 
-  const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
+  console.log('Current user email:', user?.email);
+  // Make case-insensitive comparison using environment variable
+  const isAdmin = user?.email?.toLowerCase() === (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase(); // Case-insensitive admin email check
+  console.log('Is admin?', isAdmin, 'Admin email from env:', import.meta.env.VITE_ADMIN_EMAIL);
   
   // Check if we're on a rider route
   const isRiderRoute = window.location.pathname.startsWith('/rider');
