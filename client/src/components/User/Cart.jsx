@@ -15,6 +15,10 @@ export default function Cart() {
   const [deliveryPincode, setDeliveryPincode] = useState('');
   const [installation, setInstallation] = useState(false);
   const [protectionPlan, setProtectionPlan] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
   const navigate = useNavigate();
 
   // Price calculations
@@ -25,6 +29,14 @@ export default function Cart() {
   const protectionFee = protectionPlan ? 1399 : 0;
   const total = subtotal - discount + deliveryCharge + installationFee + protectionFee;
 
+  // Set customer info from Firebase auth when component loads
+  React.useEffect(() => {
+    if (auth.currentUser) {
+      setCustomerName(auth.currentUser.displayName || '');
+      setCustomerEmail(auth.currentUser.email || '');
+    }
+  }, []);
+
   const handleOrder = () => {
     if (!paymentMethod) {
       toast.error('Select a payment method');
@@ -34,21 +46,46 @@ export default function Cart() {
       toast.error('Enter delivery pincode');
       return;
     }
+    if (!customerName || !customerEmail || !customerAddress) {
+      toast.error('Please provide your name, email, and delivery address');
+      return;
+    }
 
     const order = {
       userId: auth.currentUser.uid,
       products: cart.map((item) => ({ productId: item._id, quantity: item.quantity })),
       total,
       status: 'Paid',
+      customerInfo: {
+        name: customerName,
+        email: customerEmail,
+        phone: customerPhone,
+        address: `${customerAddress}, ${deliveryPincode}`
+      }
     };
 
-    createOrder(order)
-      .then(() => {
-        toast.success('Order placed successfully');
-        setCart([]);
-        navigate('/profile');
-      })
-      .catch(() => toast.error('Order placement failed'));
+    try {
+      // Show loading toast
+      const loadingToast = toast.loading('Processing your order...');
+      
+      createOrder(order)
+        .then(() => {
+          // Dismiss loading toast and show success
+          toast.dismiss(loadingToast);
+          toast.success('Order placed successfully');
+          setCart([]);
+          navigate('/profile');
+        })
+        .catch((error) => {
+          // Dismiss loading toast and show error
+          toast.dismiss(loadingToast);
+          console.error('Order placement error:', error);
+          toast.error(error.response?.data?.message || 'Order placement failed. Please try again.');
+        });
+    } catch (error) {
+      console.error('Order placement error:', error);
+      toast.error('Order placement failed. Please try again.');
+    }
   };
 
   return (
@@ -112,20 +149,79 @@ export default function Cart() {
                 </p>
               </div>
 
-              {/* Delivery Pincode */}
-              <div className="mt-4">
-                <label className="block text-gray-700">Enter Delivery Pincode</label>
-                <input
-                  type="text"
-                  value={deliveryPincode}
-                  onChange={(e) => setDeliveryPincode(e.target.value)}
-                  className="border p-2 w-full mt-1"
-                  placeholder="Enter pincode"
-                />
+              {/* Customer Information */}
+              <div className="mt-6 border-t pt-4">
+                <h2 className="text-xl font-semibold mb-4">Customer Information</h2>
+                
+                {/* Name */}
+                <div className="mb-4">
+                  <label className="block font-medium mb-2">Full Name *</label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Enter your full name"
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+                
+                {/* Email */}
+                <div className="mb-4">
+                  <label className="block font-medium mb-2">Email Address *</label>
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="Enter your email address"
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+                
+                {/* Phone */}
+                <div className="mb-4">
+                  <label className="block font-medium mb-2">Phone Number</label>
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder="Enter your phone number"
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                
+                {/* Address */}
+                <div className="mb-4">
+                  <label className="block font-medium mb-2">Delivery Address *</label>
+                  <textarea
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    placeholder="Enter your complete delivery address"
+                    className="w-full p-2 border rounded"
+                    rows="3"
+                    required
+                  />
+                </div>
+                
+                {/* Delivery Pincode */}
+                <div className="mb-4">
+                  <label className="block font-medium mb-2">Delivery Pincode *</label>
+                  <input
+                    type="text"
+                    value={deliveryPincode}
+                    onChange={(e) => setDeliveryPincode(e.target.value)}
+                    placeholder="Enter pincode for free delivery"
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
               </div>
-
+              
               {/* Additional Services */}
-              <div className="mt-4">
+              <div className="mt-6 border-t pt-4">
+                <h2 className="text-xl font-semibold mb-4">Additional Services</h2>
+                
                 <div className="border p-4 mb-4">
                   <h3 className="text-md font-semibold">Installation and Demo</h3>
                   <p>₹1,350 • Installation & Demo by Sat, Apr 26</p>
@@ -136,6 +232,7 @@ export default function Cart() {
                     {installation ? 'Remove' : 'Add'}
                   </button>
                 </div>
+                
                 <div className="border p-4">
                   <h3 className="text-md font-semibold">Complete Appliance Protection (3 years)</h3>
                   <p>₹1,399 ₹2,699 48% off</p>

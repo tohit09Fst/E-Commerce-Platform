@@ -22,7 +22,8 @@ export default function AdminNavbar() {
       <div className="flex justify-between items-center">
         <div>
           <Link to="/admin-dashboard" className="text-blue-500 text-xl font-bold mr-4">Dashboard</Link>
-          <Link to="/admin-order-list" className="text-blue-500 text-xl font-bold mr-4">Admin Order List</Link> {/* New Link */}
+          <Link to="/admin-order-list" className="text-blue-500 text-xl font-bold mr-4">Orders</Link>
+          <Link to="/admin-riders" className="text-blue-500 text-xl font-bold mr-4">Manage Riders</Link>
         </div>
         <button
           onClick={logout}
