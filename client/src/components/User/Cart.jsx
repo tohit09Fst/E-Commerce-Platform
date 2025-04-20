@@ -6,6 +6,7 @@ import { app } from '../../Firebase';
 import UserNavbar from './UserNavbar';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { FaTrash, FaCreditCard, FaShoppingCart } from 'react-icons/fa';
 
 const auth = getAuth(app);
 
@@ -74,7 +75,7 @@ export default function Cart() {
           toast.dismiss(loadingToast);
           toast.success('Order placed successfully');
           setCart([]);
-          navigate('/profile');
+          navigate('/my-orders');
         })
         .catch((error) => {
           // Dismiss loading toast and show error
@@ -89,22 +90,22 @@ export default function Cart() {
   };
 
   return (
-    <div>
+    <div className='bg-blue-100'>
       <UserNavbar />
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto p-4 bg-blue-100">
         <h1 className="text-2xl font-bold mb-4">Cart</h1>
         {cart.length === 0 ? (
           <p>Your cart is empty</p>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Product Summary */}
-            <div className="bg-white p-4 rounded shadow">
+            <div className="bg-white p-4 rounded-lg shadow-md">
               {cart.map((item) => (
                 <div key={item._id} className="flex items-center mb-4 border-b pb-4">
                   <img
                     src={item.image || 'https://via.placeholder.com/100'}
                     alt={item.name}
-                    className="w-24 h-24 object-cover mr-4"
+                    className="w-24 h-24 object-cover mr-4 rounded"
                   />
                   <div>
                     <h2 className="text-lg font-semibold">{item.name}</h2>
@@ -113,9 +114,9 @@ export default function Cart() {
                   </div>
                   <button
                     onClick={() => removeFromCart(item._id)}
-                    className="ml-auto bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                    className="ml-auto bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 flex items-center space-x-1"
                   >
-                    Remove
+                    <FaTrash /> <span>Remove</span>
                   </button>
                 </div>
               ))}
@@ -126,7 +127,7 @@ export default function Cart() {
             </div>
 
             {/* Price Details and Actions */}
-            <div className="bg-white p-4 rounded shadow">
+            <div className="bg-white p-4 rounded-lg shadow-md">
               <h2 className="text-xl font-bold mb-4">Price Details</h2>
               <div className="space-y-2">
                 <p>Price ({cart.length} item{cart.length > 1 ? 's' : ''}) <span className="float-right">₹{subtotal}</span></p>
@@ -161,7 +162,7 @@ export default function Cart() {
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="Enter your full name"
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     required
                   />
                 </div>
@@ -174,7 +175,7 @@ export default function Cart() {
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
                     placeholder="Enter your email address"
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     required
                   />
                 </div>
@@ -187,7 +188,7 @@ export default function Cart() {
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="Enter your phone number"
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
                 
@@ -198,7 +199,7 @@ export default function Cart() {
                     value={customerAddress}
                     onChange={(e) => setCustomerAddress(e.target.value)}
                     placeholder="Enter your complete delivery address"
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     rows="3"
                     required
                   />
@@ -212,7 +213,7 @@ export default function Cart() {
                     value={deliveryPincode}
                     onChange={(e) => setDeliveryPincode(e.target.value)}
                     placeholder="Enter pincode for free delivery"
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     required
                   />
                 </div>
@@ -222,24 +223,24 @@ export default function Cart() {
               <div className="mt-6 border-t pt-4">
                 <h2 className="text-xl font-semibold mb-4">Additional Services</h2>
                 
-                <div className="border p-4 mb-4">
+                <div className="border p-4 mb-4 rounded-lg shadow-sm">
                   <h3 className="text-md font-semibold">Installation and Demo</h3>
                   <p>₹1,350 • Installation & Demo by Sat, Apr 26</p>
                   <button
                     onClick={() => setInstallation(!installation)}
-                    className="bg-yellow-500 text-white px-4 py-1 rounded mt-2"
+                    className="bg-yellow-500 text-white px-4 py-2 rounded mt-2"
                   >
                     {installation ? 'Remove' : 'Add'}
                   </button>
                 </div>
                 
-                <div className="border p-4">
+                <div className="border p-4 rounded-lg shadow-sm">
                   <h3 className="text-md font-semibold">Complete Appliance Protection (3 years)</h3>
                   <p>₹1,399 ₹2,699 48% off</p>
                   <p className="text-gray-600">Save money on repair and maintenance...</p>
                   <button
                     onClick={() => setProtectionPlan(!protectionPlan)}
-                    className="bg-yellow-500 text-white px-4 py-1 rounded mt-2"
+                    className="bg-yellow-500 text-white px-4 py-2 rounded mt-2"
                   >
                     {protectionPlan ? 'Remove' : 'Add'}
                   </button>
@@ -252,7 +253,7 @@ export default function Cart() {
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="border p-2 w-full mt-1"
+                  className="border p-3 w-full mt-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="">Select</option>
                   <option value="credit_card">Credit Card</option>
@@ -264,10 +265,10 @@ export default function Cart() {
               {/* Action Buttons */}
               <button
                 onClick={handleOrder}
-                className="bg-orange-500 text-white px-4 py-2 rounded w-full mt-4"
+                className="bg-orange-500 text-white px-6 py-3 rounded-lg w-full mt-4 flex items-center justify-center space-x-2"
                 disabled={!paymentMethod || !deliveryPincode}
               >
-                Place Order
+                <FaCreditCard /> <span>Place Order</span>
               </button>
             </div>
           </div>

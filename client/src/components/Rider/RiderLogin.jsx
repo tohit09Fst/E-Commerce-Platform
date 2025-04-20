@@ -51,7 +51,7 @@ export default function RiderLogin() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-teal-200">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold text-center mb-6">Rider Login</h2>
         
@@ -84,10 +84,10 @@ export default function RiderLogin() {
         
         <div className="text-center mt-4">
           <p className="text-sm text-gray-600">
-            Are you a customer? <a href="/login" className="text-blue-500 hover:text-blue-700">Login here</a>
+            Are you a customer? <a href="/login" className="text-teal-600 hover:text-teal-800 transition-all duration-300">Login here</a>
           </p>
           <p className="text-sm text-gray-600 mt-2">
-            Are you an admin? <a href="/login" className="text-blue-500 hover:text-blue-700">Login here</a>
+            Are you an admin? <a href="/login" className="text-teal-600 hover:text-teal-800 transition-all duration-300">Login here</a>
           </p>
         </div>
       </div>

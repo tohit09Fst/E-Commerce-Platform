@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getOrderDetails, updateOrderStatusByRider } from '../../services/api';
+import { FaArrowLeft, FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaBoxOpen, FaTruck } from 'react-icons/fa';
 
 export default function OrderDetail() {
   const { orderId } = useParams();
@@ -14,7 +15,6 @@ export default function OrderDetail() {
   const [rider, setRider] = useState(null);
 
   useEffect(() => {
-    // Check if rider is logged in
     const riderInfo = localStorage.getItem('riderInfo');
     if (!riderInfo) {
       navigate('/rider/login');
@@ -26,8 +26,6 @@ export default function OrderDetail() {
         setLoading(true);
         const riderData = JSON.parse(riderInfo);
         setRider(riderData);
-
-        // Fetch order details
         const response = await getOrderDetails(orderId);
         setOrder(response.data);
         setStatus(response.data.status);
@@ -43,54 +41,31 @@ export default function OrderDetail() {
   }, [orderId, navigate]);
 
   const handleUpdateStatus = async () => {
-    // Validate input
     if (!status || status === order.status) {
       setError('Please select a different status');
       return;
     }
 
-    // Make sure we have a valid rider ID
     if (!rider || !rider._id) {
       setError('Rider information is missing. Please log in again.');
       return;
     }
 
     try {
-      // Start submission process
       setSubmitting(true);
       setError('');
 
-      // Log the request details for debugging
-      console.log('Attempting to update order status:', {
-        orderId,
-        riderId: rider._id,
-        status,
-        deliveryNotes: deliveryNotes || ''
-      });
-
-      // Make the API call with a timeout
       const response = await Promise.race([
         updateOrderStatusByRider(orderId, rider._id, status, deliveryNotes || ''),
-        new Promise((_, reject) => 
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Request timed out')), 10000)
         )
       ]);
 
-      // Log successful response
-      console.log('Status update successful:', response.data);
-      
-      // Show success message
       alert(`Order status updated to ${status} successfully!`);
-      
-      // Navigate back to dashboard
       navigate('/rider/dashboard');
     } catch (error) {
-      // Log the full error for debugging
-      console.error('Error updating order status:', error);
-      
-      // Extract the most useful error message to show to the user
       let errorMessage = 'Failed to update order status. Please try again.';
-      
       if (error.message === 'Request timed out') {
         errorMessage = 'Request timed out. Please check your connection and try again.';
       } else if (error.response?.data?.message) {
@@ -98,11 +73,8 @@ export default function OrderDetail() {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
-      // Set the error message for display
       setError(errorMessage);
     } finally {
-      // Always reset the submitting state
       setSubmitting(false);
     }
   };
@@ -110,7 +82,7 @@ export default function OrderDetail() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
       </div>
     );
   }
@@ -119,12 +91,12 @@ export default function OrderDetail() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 animate-pulse">
             {error}
           </div>
           <button
             onClick={() => navigate('/rider/dashboard')}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-all duration-200"
           >
             Back to Dashboard
           </button>
@@ -135,88 +107,98 @@ export default function OrderDetail() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <nav className="bg-blue-600 text-white p-4 shadow-md">
+      <nav className="bg-blue-600 text-white p-4 shadow-lg">
         <div className="container mx-auto flex items-center">
           <button
             onClick={() => navigate('/rider/dashboard')}
-            className="mr-4 text-white"
+            className="mr-4 text-white hover:scale-110 transition-transform"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+            <FaArrowLeft className="h-6 w-6" />
           </button>
-          <h1 className="text-xl font-bold">Order Details</h1>
+          <h1 className="text-xl font-semibold">Order Details</h1>
         </div>
       </nav>
 
       <div className="container mx-auto p-4">
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 animate-pulse">
             {error}
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-          <div className="p-4 border-b bg-gray-50">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold">Order #{order._id.substring(order._id.length - 6)}</h2>
-              <span className={`px-3 py-1 rounded text-sm font-bold ${order.status === 'Shipped' ? 'bg-yellow-100 text-yellow-800' : order.status === 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                {order.status}
-              </span>
-            </div>
-            <p className="text-sm text-gray-600 mt-1">
-              {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
-            </p>
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 transition-shadow hover:shadow-xl">
+          <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
+          <div>
+  <h2 className="text-xl font-bold flex items-center gap-2">
+    <FaBoxOpen /> Order #{order._id.slice(-6)}
+  </h2>
+  <p className="text-sm text-gray-500 mt-1">
+    Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}
+  </p>
+</div>
+            <span className={`px-3 py-1 rounded text-sm font-bold transition-all duration-300 ${order.status === 'Shipped' ? 'bg-yellow-100 text-yellow-800' : order.status === 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              {order.status}
+            </span>
           </div>
 
           <div className="p-4 border-b">
-            <h3 className="font-semibold text-lg mb-3">Customer Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+              <FaUser /> Customer Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-gray-600">Name</p>
+                <p className="text-gray-600 flex items-center gap-1"><FaUser /> Name</p>
                 <p className="font-medium">{order.customerInfo.name}</p>
               </div>
               <div>
-                <p className="text-gray-600">Email</p>
+                <p className="text-gray-600 flex items-center gap-1"><FaEnvelope /> Email</p>
                 <p className="font-medium">{order.customerInfo.email}</p>
               </div>
               <div>
-                <p className="text-gray-600">Phone</p>
+                <p className="text-gray-600 flex items-center gap-1"><FaPhone /> Phone</p>
                 <p className="font-medium">{order.customerInfo.phone || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-gray-600">Address</p>
+                <p className="text-gray-600 flex items-center gap-1"><FaMapMarkerAlt /> Address</p>
                 <p className="font-medium">{order.customerInfo.address}</p>
               </div>
             </div>
           </div>
 
           <div className="p-4 border-b">
-            <h3 className="font-semibold text-lg mb-3">Products</h3>
-            <div className="overflow-x-auto">
+            <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+              <FaTruck /> Products
+            </h3>
+            <div className="overflow-x-auto text-sm">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    <th className="px-4 py-3 text-left">Product</th>
+                    <th className="px-4 py-3 text-left">Quantity</th>
+                    <th className="px-4 py-3 text-right">Price</th>
+                    <th className="px-4 py-3 text-right">Total</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-gray-100">
                   {order.products.map((item) => (
                     <tr key={item._id}>
-                      <td className="px-4 py-4 whitespace-nowrap">{item.productId.name}</td>
-                      <td className="px-4 py-4 whitespace-nowrap">{item.quantity}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right">${item.productId.price.toFixed(2)}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right">${(item.productId.price * item.quantity).toFixed(2)}</td>
+                      <td className="px-4 py-2">{item.productId.name}</td>
+                      <td className="px-4 py-2">{item.quantity}</td>
+                      <td className="px-4 py-2 text-right">${item.productId.price.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-right">${(item.productId.price * item.quantity).toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="bg-gray-50">
-                    <td colSpan="3" className="px-4 py-3 text-right font-bold">Total</td>
-                    <td className="px-4 py-3 text-right font-bold">${order.total.toFixed(2)}</td>
+                  <tr className="bg-gray-50 font-semibold">
+                    <td colSpan="3" className="px-4 py-3 text-right">Total</td>
+                    <td className="px-4 py-3 text-right">${order.total.toFixed(2)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -224,55 +206,43 @@ export default function OrderDetail() {
           </div>
 
           {order.status === 'Shipped' && (
-            <div className="p-4">
+            <div className="p-4 animate-fade-in">
               <h3 className="font-semibold text-lg mb-3">Update Delivery Status</h3>
-              
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Status</label>
-                <div className="flex space-x-4">
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      className="form-radio h-5 w-5 text-blue-600"
-                      name="status"
-                      value="Delivered"
-                      checked={status === 'Delivered'}
-                      onChange={() => setStatus('Delivered')}
-                    />
-                    <span className="ml-2 text-gray-700">Delivered</span>
-                  </label>
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      className="form-radio h-5 w-5 text-red-600"
-                      name="status"
-                      value="Undelivered"
-                      checked={status === 'Undelivered'}
-                      onChange={() => setStatus('Undelivered')}
-                    />
-                    <span className="ml-2 text-gray-700">Undelivered</span>
-                  </label>
-                </div>
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="deliveryNotes">
-                  Delivery Notes
+              <div className="mb-4 flex gap-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="status"
+                    value="Delivered"
+                    checked={status === 'Delivered'}
+                    onChange={() => setStatus('Delivered')}
+                    className="form-radio text-green-600 h-5 w-5"
+                  />
+                  <span>Delivered</span>
                 </label>
-                <textarea
-                  id="deliveryNotes"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  rows="3"
-                  placeholder="Add any notes about the delivery..."
-                  value={deliveryNotes}
-                  onChange={(e) => setDeliveryNotes(e.target.value)}
-                ></textarea>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="status"
+                    value="Undelivered"
+                    checked={status === 'Undelivered'}
+                    onChange={() => setStatus('Undelivered')}
+                    className="form-radio text-red-600 h-5 w-5"
+                  />
+                  <span>Undelivered</span>
+                </label>
               </div>
-              
+              <textarea
+                rows="3"
+                placeholder="Add any notes about the delivery..."
+                value={deliveryNotes}
+                onChange={(e) => setDeliveryNotes(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded shadow-sm focus:ring focus:ring-blue-200 transition"
+              />
               <button
                 onClick={handleUpdateStatus}
                 disabled={submitting || status === order.status}
-                className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="mt-3 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 transition-all"
               >
                 {submitting ? 'Updating...' : 'Update Status'}
               </button>
